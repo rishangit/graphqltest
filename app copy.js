@@ -8,7 +8,7 @@ const app = express();
 
 const Event = require('./models/event')
 
-const Access = require('./models/access')
+const events = []
 
 
 app.use(bodyParser.json());
@@ -46,24 +46,23 @@ app.use('/graphql', graphqlHttp({
     `),
     rootValue: {
         events: (args) => {
-            return Access.list().then(events => {
+            return Event.find().then(events => {
                 return events.map(event => {
                     return event
                 })
             }).catch(err => { throw err });
         },
         createEvent: (args) => {
-            const event = {
+            const event = new Event({
                 title: args.eventInput.title,
                 description: args.eventInput.description,
                 price: args.eventInput.price,
                 date: new Date(args.eventInput.date)
 
-            }
-
-            return Access.save(event).then(result => {
+            })
+            return event.save().then(result => {
                 console.log(result)
-                return { ...result };
+                return { ...result._doc };
             }).catch(err => {
                 console.log(err)
                 throw err
@@ -74,13 +73,12 @@ app.use('/graphql', graphqlHttp({
 
 }))
 
-// mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-8m47i.mongodb.net/${process.env.MOGO_DB}?retryWrites=true&w=majority`).then(() => {
-//     console.log('db')
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-8m47i.mongodb.net/${process.env.MOGO_DB}?retryWrites=true&w=majority`).then(() => {
+    console.log('db')
+    app.listen(3000, () => {
+        console.log('server run on port 3000')
+    });
+}).catch(err => {
+    console.log('db error', err)
+})
 
-// }).catch(err => {
-//     console.log('db error', err)
-// })
-
-app.listen(3000, () => {
-    console.log('server run on port 3000')
-});
